@@ -41,7 +41,7 @@ public class Client extends Thread {
 	
 	public static void main(String[] args) {
 		Scanner scanner = new Scanner(System.in);
-		Client c = new Client(scanner.nextLine());
+		Client c = new Client("Kalle");
 		MsgReceiver r = new MsgReceiver(c);
 		r.start();
 		MsgSender s = new MsgSender(c);
