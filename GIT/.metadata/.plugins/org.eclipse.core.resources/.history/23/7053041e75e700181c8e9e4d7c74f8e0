@@ -43,7 +43,7 @@ public class Client extends Thread {
 		System.out.print("Welcome! What is your name?\t");
 		Scanner scanner = new Scanner(System.in);
 		Client c = new Client(scanner.nextLine());
-		System.out.println("Okidoki " + c.name +", if you say so.\nType a message and press enter to send.");
+		System.out.println("Okidoki " + c.name +", if you say so.\n Type msg and press enter to send.");
 		MsgReceiver r = new MsgReceiver(c);
 		r.start();
 		MsgSender s = new MsgSender(c);
