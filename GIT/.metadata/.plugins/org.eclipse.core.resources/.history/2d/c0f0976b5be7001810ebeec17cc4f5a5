@@ -1,0 +1,51 @@
+import java.net.*;
+import java.util.*;
+import java.io.*;
+
+public class Server {
+	public static final int PORT = 5678;
+	private List<Connection> connectionList = new ArrayList<Connection>();
+
+	public static void main(String args[]) {
+		try {
+			ServerSocket listenSocket = new ServerSocket(PORT);
+			while (true) {
+				Connection connection = new Connection(listenSocket.accept());
+				connectionList.add(connection);
+				connection.start();
+				
+			}
+		} catch (IOException e) {
+			System.out.println("Listen :" + e.getMessage());
+		}
+	}
+
+}
+
+class Connection extends Thread {
+	DataInputStream in;
+	DataOutputStream out;
+	Socket clientSocket;
+
+	public Connection(Socket aClientSocket) {
+		try {
+			clientSocket = aClientSocket;
+			in = new DataInputStream(clientSocket.getInputStream());
+			out = new DataOutputStream(clientSocket.getOutputStream());
+		} catch (IOException e) {
+			System.out.println("Connection:" + e.getMessage());
+		}
+	}
+
+	public void run() {
+		while(true) {
+			try { // an echo server
+				out.writeUTF(in.readUTF());
+			} catch (EOFException e) {
+				System.out.println("EOF:" + e.getMessage());
+			} catch (IOException e) {
+				System.out.println("IO:" + e.getMessage());
+			} 
+		}
+	}
+}

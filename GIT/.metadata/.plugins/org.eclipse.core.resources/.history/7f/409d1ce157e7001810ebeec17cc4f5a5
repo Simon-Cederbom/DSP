@@ -1,0 +1,11 @@
+
+public class MsgReceiver extends Thread{
+	Client c = null;
+	public void run(Client client) {
+		c = client;
+		boolean stop = false;
+		while(!stop) {
+			c.recive();
+		}
+	}
+}
