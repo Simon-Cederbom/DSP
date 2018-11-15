@@ -7,7 +7,7 @@ public class MsgReceiver extends Thread{
 	
 	public void run() {		
 		while(true) {
-			c.recive();
+			c.receive();
 		}
 	}
 }

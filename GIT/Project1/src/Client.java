@@ -14,6 +14,7 @@ public class Client extends Thread {
 			s = new Socket("localhost", Server.PORT);
 			in = new DataInputStream(s.getInputStream());
 			out = new DataOutputStream(s.getOutputStream());
+			out.writeUTF("-setName " + name);
 		} catch (UnknownHostException e) {
 			System.out.println("Sock:" + e.getMessage());
 		} catch (EOFException e) {
@@ -23,15 +24,16 @@ public class Client extends Thread {
 		}
 	}
 	
+	//Start message with @ followed by name to write a private message 
 	public void send(String msg) {
 		try {
-			out.writeUTF("Message from "+ this.name +": " + msg);
+			out.writeUTF(msg);
 		}catch (IOException e) {
 			System.out.println("IO:" + e.getMessage());
 		}	
 	}
 	
-	public void recive() {
+	public void receive() {
 		try {
 			System.out.println(in.readUTF());
 		}catch (IOException e) {
@@ -43,11 +45,11 @@ public class Client extends Thread {
 		System.out.print("Welcome! What is your name?\t");
 		Scanner scanner = new Scanner(System.in);
 		Client c = new Client(scanner.nextLine());
-		System.out.println("Okidoki " + c.name +", if you say so.\nType a message and press enter to send.");
+		//System.out.println("Okidoki " + c.name +", if you say so.\nType a message and press enter to send.");
 		MsgReceiver r = new MsgReceiver(c);
 		r.start();
-		MsgSender s = new MsgSender(c);
-		s.start();
+		MsgSender sender = new MsgSender(c);
+		sender.start();
 	}
 
 }

@@ -11,10 +11,19 @@ public class Server {
 			connection.send(msg);
 		}
 	}
+	
+	public void updatePrivate(String msg, String name) {
+		for(Connection connection : connectionList) {
+			if(connection.name.equals(name)) {
+				connection.send(msg);
+			}
+		}
+	}
 
 	public static void main(String args[]) {
+		ServerSocket listenSocket = null;
 		try {
-			ServerSocket listenSocket = new ServerSocket(PORT);
+			listenSocket = new ServerSocket(PORT);
 			Server s = new Server();
 			while (true) {
 				Connection connection = new Connection(listenSocket.accept(), s);
@@ -23,6 +32,15 @@ public class Server {
 			}
 		} catch (IOException e) {
 			System.out.println("Listen :" + e.getMessage());
+		}finally {
+			if(listenSocket != null) {
+				try {
+					listenSocket.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 }
@@ -32,6 +50,7 @@ class Connection extends Thread {
 	DataOutputStream out;
 	Socket clientSocket;
 	Server server;
+	String name;
 
 	public Connection(Socket aClientSocket, Server s) {
 		try {
@@ -39,6 +58,10 @@ class Connection extends Thread {
 			server = s;
 			in = new DataInputStream(clientSocket.getInputStream());
 			out = new DataOutputStream(clientSocket.getOutputStream());
+			String command = in.readUTF();
+			if(command.contains("-setName")) {
+				name = command.split(" ")[1];
+			}
 		} catch (IOException e) {
 			System.out.println("Connection:" + e.getMessage());
 		}
@@ -56,7 +79,14 @@ class Connection extends Thread {
 		while(true) {
 			try { // an echo server
 				//out.writeUTF(in.readUTF());
-				server.updateClients(in.readUTF());
+				String message = in.readUTF();
+				if(message.startsWith("@")) {
+					server.updatePrivate(name + ": " + message.substring(message.indexOf(" ")),
+							message.substring(1, message.indexOf(" ")));
+				}
+				else {
+					server.updateClients(name + ": " + message);
+				}
 			} catch (EOFException e) {
 				System.out.println("EOF:" + e.getMessage());
 			} catch (IOException e) {
