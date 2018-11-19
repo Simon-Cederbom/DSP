@@ -34,6 +34,10 @@ public class Server {
 	public void addConnection(Connection c) {
 		connectionList.add(c);
 	}
+	
+	public void removeConnection(Connection c) {
+		connectionList.remove(c);
+	}
 
 	public static void main(String args[]) {
 		ServerSocket listenSocket = null;
@@ -65,6 +69,7 @@ class Connection extends Thread {
 	Socket clientSocket;
 	Server server;
 	String name;
+	private volatile boolean stop = false;
 
 	public Connection(Socket aClientSocket, Server s) {
 		try {
@@ -84,9 +89,13 @@ class Connection extends Thread {
 			e.printStackTrace();
 		}
 	}
+	
+	public void requestStop() {
+		stop = true;
+	}
 
 	public void run() {
-		while(true) {
+		while(!stop) {
 			try {
 				String message = in.readUTF();
 				if(message.startsWith("-setName")) {
@@ -99,6 +108,11 @@ class Connection extends Thread {
 						server.addConnection(this);
 						send("Welcome " + username + "!");
 					}
+				}
+				else if(message.startsWith("-quit")) {
+					requestStop();
+					server.removeConnection(this);
+					server.updateClients(name + " disconnected from chat.");
 				}
 				else if(message.startsWith("@")) {
 					server.updatePrivate(name + ": " + message.substring(message.indexOf(" ")),

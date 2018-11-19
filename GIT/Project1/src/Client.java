@@ -8,6 +8,8 @@ public class Client {
 	DataOutputStream out;
 	boolean initialized = false;
 	Scanner scanner = new Scanner(System.in);
+	MsgReceiver r;
+	MsgSender sender;
 
 	public Client() {
 		try {
@@ -17,17 +19,20 @@ public class Client {
 			System.out.print("Welcome! What is your name?\t");
 			send("-setName " + scanner.nextLine());
 			boolean accepted = false;
-			while(!accepted) {
+			while (!accepted) {
 				String message = in.readUTF();
 				System.out.println(message);
-				if(message.startsWith("Error 777")) {
+				if (message.startsWith("Error 777")) {
 					System.out.println("Enter new name: ");
 					send("-setName " + scanner.nextLine());
-				}
-				else {
+				} else {
 					accepted = true;
 				}
 			}
+			r = new MsgReceiver(this);
+			r.start();
+			sender = new MsgSender(this, this.scanner);
+			sender.start();
 		} catch (UnknownHostException e) {
 			System.out.println("Sock:" + e.getMessage());
 		} catch (EOFException e) {
@@ -36,32 +41,45 @@ public class Client {
 			System.out.println("IO:" + e.getMessage());
 		}
 	}
-	
-	//Start message with @ followed by name to write a private message 
+
+	// Start message with @ followed by name to write a private message
 	public void send(String msg) {
 		try {
 			out.writeUTF(msg);
-		}catch (IOException e) {
+			if (msg.startsWith("-quit")) {
+				quit();
+			}
+		} catch (IOException e) {
 			System.out.println("IO:" + e.getMessage());
-		}	
+		}
 	}
-	
+
 	public void receive() {
 		try {
 			String message = in.readUTF();
 			System.out.println(message);
-		}catch (IOException e) {
+		} catch (IOException e) {
 			System.out.println("IO:" + e.getMessage());
-		}	
+		}
 	}
-	
+
+	@SuppressWarnings("deprecation")
+	public void quit() {
+		r.stop();
+		sender.stop();
+	}
+
 	public static void main(String[] args) {
 		Client c = new Client();
-		MsgReceiver r = new MsgReceiver(c);
-		r.start();
-		MsgSender sender = new MsgSender(c, c.scanner);
-		sender.start();
+		while (c.r.isAlive() && c.sender.isAlive()) {
+
+		}
+		try {
+			c.s.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 }
-

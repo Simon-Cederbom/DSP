@@ -1,12 +1,18 @@
 
 public class MsgReceiver extends Thread{
-	Client c = null;	
+	Client c = null;
+	private volatile boolean stop = false;
+	
 	public MsgReceiver(Client client) {
 		c = client;
 	}
 	
+	public void requestStop() {
+		stop = true;
+	}
+	
 	public void run() {		
-		while(true) {
+		while(!stop) {
 			c.receive();
 		}
 	}
