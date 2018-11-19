@@ -2,19 +2,32 @@ import java.net.*;
 import java.io.*;
 import java.util.Scanner;
 
-public class Client extends Thread {
+public class Client {
 	Socket s = null;
 	DataInputStream in;
 	DataOutputStream out;
-	String name;
+	boolean initialized = false;
+	Scanner scanner = new Scanner(System.in);
 
-	public Client(String name) {
+	public Client() {
 		try {
-			this.name = name;
 			s = new Socket("localhost", Server.PORT);
 			in = new DataInputStream(s.getInputStream());
 			out = new DataOutputStream(s.getOutputStream());
-			out.writeUTF("-setName " + name);
+			System.out.print("Welcome! What is your name?\t");
+			send("-setName " + scanner.nextLine());
+			boolean accepted = false;
+			while(!accepted) {
+				String message = in.readUTF();
+				System.out.println(message);
+				if(message.startsWith("Error 777")) {
+					System.out.println("Enter new name: ");
+					send("-setName " + scanner.nextLine());
+				}
+				else {
+					accepted = true;
+				}
+			}
 		} catch (UnknownHostException e) {
 			System.out.println("Sock:" + e.getMessage());
 		} catch (EOFException e) {
@@ -35,20 +48,18 @@ public class Client extends Thread {
 	
 	public void receive() {
 		try {
-			System.out.println(in.readUTF());
+			String message = in.readUTF();
+			System.out.println(message);
 		}catch (IOException e) {
 			System.out.println("IO:" + e.getMessage());
 		}	
 	}
 	
 	public static void main(String[] args) {
-		System.out.print("Welcome! What is your name?\t");
-		Scanner scanner = new Scanner(System.in);
-		Client c = new Client(scanner.nextLine());
-		//System.out.println("Okidoki " + c.name +", if you say so.\nType a message and press enter to send.");
+		Client c = new Client();
 		MsgReceiver r = new MsgReceiver(c);
 		r.start();
-		MsgSender sender = new MsgSender(c);
+		MsgSender sender = new MsgSender(c, c.scanner);
 		sender.start();
 	}
 
