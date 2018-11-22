@@ -62,7 +62,8 @@ public class Client {
 			System.out.println("IO:" + e.getMessage());
 		}
 	}
-
+	
+	
 	@SuppressWarnings("deprecation")
 	public void quit() {
 		r.stop();
@@ -77,8 +78,7 @@ public class Client {
 		try {
 			c.s.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.out.println("IO: " + e.getMessage());
 		}
 	}
 
