@@ -94,7 +94,9 @@ class Connection extends Thread {
 
 	public void send(String msg) {
 		try {
-			out.writeUTF(msg);
+			if (!banned) {
+				out.writeUTF(msg);
+			}
 		} catch (IOException e) {
 			System.out.println("Send: " + e.getMessage());
 		}
