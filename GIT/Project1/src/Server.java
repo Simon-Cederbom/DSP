@@ -118,6 +118,7 @@ class Connection extends Thread {
 					requestStop();
 					server.removeConnection(this);
 					server.updateClients(name + " disconnected from chat.");
+					return;
 				}
 				if (!banned) {
 					if (message.startsWith("-setName")) {
@@ -133,13 +134,16 @@ class Connection extends Thread {
 						server.updatePrivate(name + ": " + message.substring(message.indexOf(" ")),
 								message.substring(1, message.indexOf(" ")), this.name);
 					} else if (message.startsWith("-setPrivilege")) {
-						userType = message.split(" ")[1];
-						send("You are now a " + userType + " user!");
+						String[] messageSplit = message.split(" ");
+						if (messageSplit.length > 1) {
+							userType = messageSplit[1];
+							send("You are now a " + userType + " user!");
+						}
 					} else if (message.startsWith("-ban")) {
 						if (userType.equals("super")) {
 							String banName = message.split(" ")[1];
-							server.banUser(banName);
 							server.updateClients(banName + " has been banned from the chat by " + name);
+							server.banUser(banName);
 						} else {
 							send("You don't have permission to do that!");
 						}
