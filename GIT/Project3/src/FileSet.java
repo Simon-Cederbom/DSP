@@ -4,89 +4,82 @@ import java.util.*;
 public class FileSet implements Serializable, Set<File>{
 
 	private static final long serialVersionUID = 1L;
+	
+	ArrayList<File> fileList = new ArrayList<File>();
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return fileList.size();
 	}
 
 	@Override
 	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+		return fileList.isEmpty();
 	}
 
 	@Override
 	public boolean contains(Object o) {
-		// TODO Auto-generated method stub
-		return false;
+		return fileList.contains(o);
 	}
 
 	@Override
 	public Iterator iterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return fileList.iterator();
 	}
 
 	@Override
 	public Object[] toArray() {
-		// TODO Auto-generated method stub
-		return null;
+		return fileList.toArray();
 	}
 
 	@Override
 	public Object[] toArray(Object[] a) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public boolean add(Object e) {
-		// TODO Auto-generated method stub
-		return false;
+		return fileList.toArray(a);
 	}
 
 	@Override
 	public boolean remove(Object o) {
-		// TODO Auto-generated method stub
-		return false;
+		return fileList.remove(o);
 	}
 
 	@Override
-	public boolean containsAll(Collection c) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean containsAll(Collection<?> c) {
+		return fileList.containsAll(c);
 	}
 
 	@Override
-	public boolean addAll(Collection c) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean addAll(Collection<? extends File> c) {
+		boolean success = true;
+		for(Object o : c) {
+			if(fileList.contains(o)) {
+				success = false;
+			}
+		}
+		if(success) return fileList.addAll((Collection<? extends File>) c);
+		else return success;
 	}
 
 	@Override
-	public boolean retainAll(Collection c) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean retainAll(Collection<?> c) {
+		return fileList.retainAll(c);
 	}
 
 	@Override
-	public boolean removeAll(Collection c) {
-		// TODO Auto-generated method stub
-		return false;
+	public boolean removeAll(Collection<?> c) {
+		return fileList.removeAll(c);
 	}
 
 	@Override
 	public void clear() {
-		// TODO Auto-generated method stub
-		
+		fileList.clear();
 	}
 
 	@Override
 	public boolean add(File e) {
-		// TODO Auto-generated method stub
-		return false;
+		if(fileList.contains(e)) {
+			return false;
+		}
+		return fileList.add(e);
 	}
 
 }
