@@ -43,13 +43,55 @@ class Connection extends Thread {
 		}
 	}
 
+	public ArrayList<File> compareFiles(String id) {
+		File fileDirectory = new File(id);
+		ArrayList<File> diff = new ArrayList<File>();
+		for (File tempFile : directory) {
+			boolean found = false;
+			for (File file : fileDirectory.listFiles()) {
+				FileInputStream tempStream = null;
+				FileInputStream fileStream = null;
+				try {
+					tempStream = new FileInputStream(tempFile);
+					byte[] tempBytes = new byte[(int) tempFile.length()];
+					tempStream.read(tempBytes);
+					fileStream = new FileInputStream(file);
+					byte[] bytes = new byte[(int) file.length()];
+					if (tempBytes.equals(bytes)) {
+						found = true;
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} finally {
+					try {
+						if (tempStream != null) {
+							tempStream.close();
+						}
+						if (fileStream != null) {
+							fileStream.close();
+						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+			}
+			if(!found) {
+				diff.add(tempFile);
+			}
+		}
+		return diff;
+	}
+
 	public void run() {
 		FileOutputStream fileOutStream = null;
 		try {
 			int numberOfFiles = in.readInt();
-			System.out.println(numberOfFiles);
+			File tempDirectory = new File("ServerTemp");
+			tempDirectory.mkdir();
 			for (int i = 0; i < numberOfFiles; i++) {
-				File file = new File("E:\\DSP\\" + in.readUTF());
+				File file = new File(tempDirectory.getName() + "\\" + in.readUTF());
 				fileOutStream = new FileOutputStream(file);
 				byte[] bytes = new byte[in.readInt()];
 				in.read(bytes);
@@ -57,6 +99,12 @@ class Connection extends Thread {
 				directory.add(file);
 				fileOutStream.close();
 			}
+			tempDirectory.delete();
+			ArrayList<File> diff = this.compareFiles("ServerTest");
+			for(File file : diff) {
+				System.out.println(file.getName());
+			}
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
