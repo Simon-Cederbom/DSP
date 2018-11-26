@@ -20,14 +20,18 @@ public class SynchronisationClient {
 		}
 	}
 
-	public void send(File file) {
+	public void send(File directory) {
 		FileInputStream fileStream = null;
 		try {
-			byte[] bytes = new byte[(int) file.length()];
-			fileStream = new FileInputStream(file);
-			fileStream.read(bytes);
-			out.writeInt((int) file.length());
-			out.write(bytes);
+			out.writeInt((int) directory.listFiles().length);
+			for (File file : directory.listFiles()) {
+				byte[] bytes = new byte[(int) file.length()];
+				fileStream = new FileInputStream(file);
+				fileStream.read(bytes);
+				out.writeUTF(file.getName());
+				out.writeInt((int) file.length());
+				out.write(bytes);
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -52,9 +56,9 @@ public class SynchronisationClient {
 			file = new File("test");
 			fileStream = new FileOutputStream(file);
 			fileStream.write(bytes);
-			File folder = new File("E:\\DSP\\Testmapp");
-			File[] list = folder.listFiles();
-			System.out.println(file.compareTo(list[0]));
+//			File folder = new File("E:\\DSP\\Testmapp");
+//			File[] list = folder.listFiles();
+//			System.out.println(file.compareTo(list[0]));
 			// File file = File.createTempFile("test", ".txt");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -65,8 +69,8 @@ public class SynchronisationClient {
 				if (fileStream != null) {
 					fileStream.close();
 				}
-				if(file != null) {
-					file.delete();
+				if (file != null) {
+					//file.delete();
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -80,10 +84,9 @@ public class SynchronisationClient {
 		SynchronisationClient c = new SynchronisationClient();
 		FileReceiver receiver = new FileReceiver(c);
 		receiver.start();
-		File folder = new File("E:\\DSP\\Testmapp");
-		File[] list = folder.listFiles();
-		System.out.println(list[0].getName());
-		c.send(list[0]);
+		File folder = new File("Testmapp");
+		// System.out.println(list[0].getName());
+		c.send(folder);
 //		for (File file : list) {
 //			System.out.println(file.getName());
 //		}

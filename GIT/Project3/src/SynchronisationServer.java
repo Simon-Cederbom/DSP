@@ -1,14 +1,15 @@
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 
 public class SynchronisationServer {
 	public static final int PORT = 6789;
-	
+
 	public static void main(String[] args) {
 		ServerSocket listenSocket = null;
 		try {
 			listenSocket = new ServerSocket(PORT);
-			while(true) {
+			while (true) {
 				Connection connection = new Connection(listenSocket.accept());
 				connection.start();
 			}
@@ -26,11 +27,12 @@ public class SynchronisationServer {
 	}
 }
 
-class Connection extends Thread{
+class Connection extends Thread {
 	DataInputStream in;
 	DataOutputStream out;
 	Socket clientSocket;
-	
+	ArrayList<File> directory = new ArrayList<File>();
+
 	public Connection(Socket aClientSocket) {
 		try {
 			clientSocket = aClientSocket;
@@ -40,13 +42,21 @@ class Connection extends Thread{
 			System.out.println("Connection:" + e.getMessage());
 		}
 	}
-	
+
 	public void run() {
+		FileOutputStream fileOutStream = null;
 		try {
-			byte[] bytes = new byte[in.readInt()];
-			in.read(bytes);
-			out.writeInt(bytes.length);
-			out.write(bytes);
+			int numberOfFiles = in.readInt();
+			System.out.println(numberOfFiles);
+			for (int i = 0; i < numberOfFiles; i++) {
+				File file = new File("E:\\DSP\\" + in.readUTF());
+				fileOutStream = new FileOutputStream(file);
+				byte[] bytes = new byte[in.readInt()];
+				in.read(bytes);
+				fileOutStream.write(bytes);
+				directory.add(file);
+				fileOutStream.close();
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
