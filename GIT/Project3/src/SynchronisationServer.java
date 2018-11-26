@@ -10,6 +10,7 @@ public class SynchronisationServer {
 			listenSocket = new ServerSocket(PORT);
 			while(true) {
 				Connection connection = new Connection(listenSocket.accept());
+				connection.start();
 			}
 		} catch (IOException e) {
 			System.out.println("Listen :" + e.getMessage());
@@ -41,9 +42,11 @@ class Connection extends Thread{
 	}
 	
 	public void run() {
-		byte[] bytes = new byte[10000];
 		try {
+			byte[] bytes = new byte[in.readInt()];
 			in.read(bytes);
+			out.writeInt(bytes.length);
+			out.write(bytes);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

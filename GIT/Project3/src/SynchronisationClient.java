@@ -20,49 +20,72 @@ public class SynchronisationClient {
 		}
 	}
 
-	public void send(byte[] bytes) {
+	public void send(File file) {
+		FileInputStream fileStream = null;
 		try {
+			byte[] bytes = new byte[(int) file.length()];
+			fileStream = new FileInputStream(file);
+			fileStream.read(bytes);
+			out.writeInt((int) file.length());
 			out.write(bytes);
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			if (fileStream != null) {
+				try {
+					fileStream.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 		}
 	}
 
-	public static void main(String[] args) {
-		SynchronisationClient c = new SynchronisationClient();
-		File folder = new File("E:\\DSP\\Testmapp");
-		byte[] bytes = new byte[(int) folder.length()];
-//		try {
-//			//c.send(bytes);
-//		} catch (FileNotFoundException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		} catch (IOException ioe) {
-//			ioe.printStackTrace();
-//		}
-		File[] list = folder.listFiles();
-		InputStream fileStream = null;
+	public void receive() {
+		FileOutputStream fileStream = null;
+		File file = null;
 		try {
-			fileStream = new FileInputStream(list[0]);
-			fileStream.read(bytes);
-		} catch (FileNotFoundException e) {
+			byte[] bytes = new byte[in.readInt()];
+			in.read(bytes);
+			file = new File("test");
+			fileStream = new FileOutputStream(file);
+			fileStream.write(bytes);
+			File folder = new File("E:\\DSP\\Testmapp");
+			File[] list = folder.listFiles();
+			System.out.println(file.compareTo(list[0]));
+			// File file = File.createTempFile("test", ".txt");
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException ioe) {
-			ioe.printStackTrace();
 		} finally {
+
 			try {
 				if (fileStream != null) {
 					fileStream.close();
+				}
+				if(file != null) {
+					file.delete();
 				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
 		}
-		for (File file : list) {
-			System.out.println(file.getName());
-		}
+	}
+
+	public static void main(String[] args) {
+		SynchronisationClient c = new SynchronisationClient();
+		FileReceiver receiver = new FileReceiver(c);
+		receiver.start();
+		File folder = new File("E:\\DSP\\Testmapp");
+		File[] list = folder.listFiles();
+		System.out.println(list[0].getName());
+		c.send(list[0]);
+//		for (File file : list) {
+//			System.out.println(file.getName());
+//		}
 	}
 }
