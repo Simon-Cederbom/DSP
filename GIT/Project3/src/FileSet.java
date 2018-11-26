@@ -23,7 +23,7 @@ public class FileSet implements Serializable, Set<File>{
 	}
 
 	@Override
-	public Iterator iterator() {
+	public Iterator<File> iterator() {
 		return fileList.iterator();
 	}
 
@@ -33,7 +33,7 @@ public class FileSet implements Serializable, Set<File>{
 	}
 
 	@Override
-	public Object[] toArray(Object[] a) {
+	public <T> T[] toArray(T[] a) {
 		return fileList.toArray(a);
 	}
 
