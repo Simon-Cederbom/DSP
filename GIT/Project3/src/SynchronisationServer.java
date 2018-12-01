@@ -33,6 +33,7 @@ class Connection extends Thread {
 	Socket clientSocket;
 	ArrayList<File> directory = new ArrayList<File>();
 	String id;
+	boolean stop = false;
 
 	public Connection(Socket aClientSocket) {
 		try {
@@ -44,7 +45,7 @@ class Connection extends Thread {
 			directory.mkdir();
 			int numberOfFiles = in.readInt();
 			FileOutputStream fileOutStream = null;
-			for(int i = 0; i < numberOfFiles; i++) {
+			for (int i = 0; i < numberOfFiles; i++) {
 				File file = new File(directory.getName() + "\\" + in.readUTF());
 				fileOutStream = new FileOutputStream(file);
 				byte[] bytes = new byte[in.readInt()];
@@ -52,6 +53,7 @@ class Connection extends Thread {
 				fileOutStream.write(bytes);
 				fileOutStream.close();
 			}
+			out.writeUTF("Files are now backed up");
 		} catch (IOException e) {
 			System.out.println("Connection:" + e.getMessage());
 		}
@@ -92,20 +94,19 @@ class Connection extends Thread {
 					}
 				}
 			}
-			if(!found) {
+			if (!found) {
 				diff.add(tempFile);
 			}
 		}
 		return diff;
 	}
-	
+
 	public boolean compareBytes(byte[] a, byte[] b) {
-		if(a.length != b.length) {
+		if (a.length != b.length) {
 			return false;
-		}
-		else {
-			for(int i = 0; i < a.length; i++) {
-				if(a[i] != b[i]) {
+		} else {
+			for (int i = 0; i < a.length; i++) {
+				if (a[i] != b[i]) {
 					return false;
 				}
 			}
@@ -113,41 +114,52 @@ class Connection extends Thread {
 		return true;
 	}
 
+	public void requestStop() {
+		stop = true;
+	}
+
 	public void run() {
 		FileOutputStream fileOutStream = null;
 		FileInputStream fileInStream = null;
 		try {
-			int numberOfFiles = in.readInt();
-			File tempDirectory = new File("ServerTemp");
-			tempDirectory.mkdir();
-			for (int i = 0; i < numberOfFiles; i++) {
-				File file = new File(tempDirectory.getName() + "\\" + in.readUTF());
-				fileOutStream = new FileOutputStream(file);
-				byte[] bytes = new byte[in.readInt()];
-				in.read(bytes);
-				fileOutStream.write(bytes);
-				directory.add(file);
-				fileOutStream.close();
+			while (!stop) {
+				String command = in.readUTF();
+				if (command.equals("-quit")) {
+					requestStop();
+				} else if(command.equals("-sync")){
+					int numberOfFiles = in.readInt();
+					File tempDirectory = new File("ServerTemp");
+					tempDirectory.mkdir();
+					for (int i = 0; i < numberOfFiles; i++) {
+						File file = new File(tempDirectory.getName() + "\\" + in.readUTF());
+						fileOutStream = new FileOutputStream(file);
+						byte[] bytes = new byte[in.readInt()];
+						in.read(bytes);
+						fileOutStream.write(bytes);
+						directory.add(file);
+						fileOutStream.close();
+					}
+					ArrayList<File> diff = this.compareFiles();
+					out.writeInt(diff.size());
+					for (File file : diff) {
+						byte[] bytes = new byte[(int) file.length()];
+						fileInStream = new FileInputStream(file);
+						fileInStream.read(bytes);
+						out.writeUTF(file.getName());
+						out.writeInt(bytes.length);
+						out.write(bytes);
+					}
+					for (File tempFile : tempDirectory.listFiles()) {
+						tempFile.delete();
+					}
+					tempDirectory.delete();
+					directory.clear();
+				}
 			}
-			ArrayList<File> diff = this.compareFiles();
-			out.writeInt(diff.size());
-			for(File file : diff) {
-				byte[] bytes = new byte[(int) file.length()];
-				fileInStream = new FileInputStream(file);
-				fileInStream.read(bytes);
-				out.writeUTF(file.getName());
-				out.writeInt(bytes.length);
-				out.write(bytes);
-			}
-			for(File tempFile : tempDirectory.listFiles()) {
-				tempFile.delete();
-			}
-			tempDirectory.delete();
-			directory.clear();
 //			for(File file : diff) {
 //				System.out.println(file.getName());
 //			}
-			
+
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

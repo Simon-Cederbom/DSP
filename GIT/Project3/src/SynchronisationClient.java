@@ -7,19 +7,23 @@ public class SynchronisationClient {
 	Socket s = null;
 	DataInputStream in;
 	DataOutputStream out;
+	String directoryPath;
+	FileReceiver receiver;
+	CommandSender sender;
 
-	public SynchronisationClient() {
+	public SynchronisationClient(Scanner scanner) {
 		try {
 			s = new Socket("localhost", SynchronisationServer.PORT);
 			in = new DataInputStream(s.getInputStream());
 			out = new DataOutputStream(s.getOutputStream());
-			Scanner scanner = new Scanner(System.in);
-			System.out.println("What folder do you want to sync? ");
-			File directory = new File(scanner.nextLine());
-			scanner.close();
 			String id = UUID.randomUUID().toString();
 			out.writeUTF(id);
-			send(directory);
+			System.out.println("What folder do you want to sync? ");
+			File directory = new File(scanner.nextLine());
+			directoryPath = directory.getPath();
+			// directory = new File(scanner.nextLine());
+			send(directoryPath);
+			System.out.println(in.readUTF());
 		} catch (UnknownHostException e) {
 			System.out.println("Sock:" + e.getMessage());
 		} catch (EOFException e) {
@@ -29,11 +33,26 @@ public class SynchronisationClient {
 		}
 	}
 
-	public void send(File directory) {
+	public void sendCommand(String message) {
+		try {
+			out.writeUTF(message);
+			if (message.equals("-quit")) {
+				quit();
+			} else if (message.equals("-sync")) {
+				send(directoryPath);
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void send(String path) {
 		FileInputStream fileStream = null;
 		try {
-			out.writeInt(directory.listFiles().length);
-			for (File file : directory.listFiles()) {
+			File d = new File(path);
+			out.writeInt(d.listFiles().length);
+			for (File file : d.listFiles()) {
 				byte[] bytes = new byte[(int) file.length()];
 				fileStream = new FileInputStream(file);
 				fileStream.read(bytes);
@@ -62,18 +81,22 @@ public class SynchronisationClient {
 			int numberOfFiles = in.readInt();
 			File tempDirectory = new File("Temp");
 			tempDirectory.mkdir();
-			for(int i = 0; i < numberOfFiles; i++) {
+			for (int i = 0; i < numberOfFiles; i++) {
 				File file = new File(tempDirectory.getName() + "\\" + in.readUTF());
-				fileStream = new FileOutputStream(file);
 				byte[] bytes = new byte[in.readInt()];
 				in.read(bytes);
+				fileStream = new FileOutputStream(file);
 				fileStream.write(bytes);
 				fileStream.close();
 			}
-			System.out.println("The files that needs to be backed up is:");
-			for(File tempFile : tempDirectory.listFiles()) {
-				System.out.println(tempFile.getName());
-				tempFile.delete();
+			if (tempDirectory.listFiles().length == 0) {
+				System.out.println("All files are up to date.");
+			} else {
+				System.out.println("The files that needs to be backed up is:");
+				for (File tempFile : tempDirectory.listFiles()) {
+					System.out.println(tempFile.getName());
+					tempFile.delete();
+				}
 			}
 			tempDirectory.delete();
 		} catch (IOException e) {
@@ -82,15 +105,20 @@ public class SynchronisationClient {
 		}
 	}
 
+	public void quit() {
+		receiver.stop();
+		sender.stop();
+	}
+
 	public static void main(String[] args) {
-		SynchronisationClient c = new SynchronisationClient();
-		FileReceiver receiver = new FileReceiver(c);
-		receiver.start();
-		//File folder = new File("Testmapp");
-		// System.out.println(list[0].getName());
-		//c.send(folder);
-//		for (File file : list) {
-//			System.out.println(file.getName());
-//		}
+		Scanner scanner = new Scanner(System.in);
+		SynchronisationClient c = new SynchronisationClient(scanner);
+		c.receiver = new FileReceiver(c);
+		c.receiver.start();
+		c.sender = new CommandSender(c, scanner);
+		c.sender.start();
+		while (c.receiver.isAlive() && c.sender.isAlive()) {
+
+		}
 	}
 }
