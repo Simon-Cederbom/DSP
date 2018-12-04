@@ -57,23 +57,22 @@ public class Client {
 	public void receive() {
 		try {
 			String message = in.readUTF();
+			if(message.equals("-quit")) return;
 			System.out.println(message);
 		} catch (IOException e) {
-			System.out.println("IO:" + e.getMessage());
+			System.out.println("IO: " + e.getMessage());
 		}
 	}
 	
 	
-	@SuppressWarnings("deprecation")
 	public void quit() {
-		r.stop();
-		sender.stop();
+		r.requestStop();
+		sender.requestStop();
 	}
 
 	public static void main(String[] args) {
 		Client c = new Client();
-		while (c.r.isAlive() && c.sender.isAlive()) {
-
+		while (c.r.isAlive() || c.sender.isAlive()) {
 		}
 		try {
 			c.s.close();
