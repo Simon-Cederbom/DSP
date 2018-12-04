@@ -30,6 +30,6 @@ public class UserInfoClient {
     }
 
     private static URI getBaseURI() {
-        return UriBuilder.fromUri("http://localhost:8080/webtest/rest/UserInfoService").build();
+        return UriBuilder.fromUri("http://localhost:8080/Project2/rest/UserInfoService").build();
     }
 }

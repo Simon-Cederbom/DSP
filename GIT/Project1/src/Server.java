@@ -118,7 +118,8 @@ class Connection extends Thread {
 					requestStop();
 					server.removeConnection(this);
 					server.updateClients(name + " disconnected from chat.");
-					return;
+					out.writeUTF("-quit");
+					continue;
 				}
 				if (!banned) {
 					if (message.startsWith("-setName")) {
