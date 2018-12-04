@@ -33,7 +33,7 @@ class Connection extends Thread {
 	Socket clientSocket;
 	ArrayList<File> directory = new ArrayList<File>();
 	String id;
-	boolean stop = false;
+	volatile boolean stop = false;
 
 	public Connection(Socket aClientSocket) {
 		try {
@@ -126,7 +126,9 @@ class Connection extends Thread {
 				String command = in.readUTF();
 				if (command.equals("-quit")) {
 					requestStop();
+					out.writeUTF(command);
 				} else if(command.equals("-sync")){
+					out.writeUTF(command);
 					int numberOfFiles = in.readInt();
 					File tempDirectory = new File("ServerTemp");
 					tempDirectory.mkdir();
@@ -150,6 +152,10 @@ class Connection extends Thread {
 						out.write(bytes);
 					}
 					for (File tempFile : tempDirectory.listFiles()) {
+						String name = tempFile.getName();
+						if(name.equals("")) {
+							int i = 0;
+						}
 						tempFile.delete();
 					}
 					tempDirectory.delete();

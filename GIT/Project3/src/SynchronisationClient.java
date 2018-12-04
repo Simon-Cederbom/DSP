@@ -56,7 +56,8 @@ public class SynchronisationClient {
 				byte[] bytes = new byte[(int) file.length()];
 				fileStream = new FileInputStream(file);
 				fileStream.read(bytes);
-				out.writeUTF(file.getName());
+				String name = file.getName();
+				out.writeUTF(name);
 				out.writeInt(bytes.length);
 				out.write(bytes);
 			}
@@ -78,27 +79,31 @@ public class SynchronisationClient {
 	public void receive() {
 		FileOutputStream fileStream = null;
 		try {
-			int numberOfFiles = in.readInt();
-			File tempDirectory = new File("Temp");
-			tempDirectory.mkdir();
-			for (int i = 0; i < numberOfFiles; i++) {
-				File file = new File(tempDirectory.getName() + "\\" + in.readUTF());
-				byte[] bytes = new byte[in.readInt()];
-				in.read(bytes);
-				fileStream = new FileOutputStream(file);
-				fileStream.write(bytes);
-				fileStream.close();
-			}
-			if (tempDirectory.listFiles().length == 0) {
-				System.out.println("All files are up to date.");
+			if (in.readUTF().equals("-quit")) {
+				return;
 			} else {
-				System.out.println("The files that needs to be backed up is:");
-				for (File tempFile : tempDirectory.listFiles()) {
-					System.out.println(tempFile.getName());
-					tempFile.delete();
+				int numberOfFiles = in.readInt();
+				File tempDirectory = new File("Temp");
+				tempDirectory.mkdir();
+				for (int i = 0; i < numberOfFiles; i++) {
+					File file = new File(tempDirectory.getName() + "\\" + in.readUTF());
+					byte[] bytes = new byte[in.readInt()];
+					in.read(bytes);
+					fileStream = new FileOutputStream(file);
+					fileStream.write(bytes);
+					fileStream.close();
 				}
+				if (tempDirectory.listFiles().length == 0) {
+					System.out.println("All files are up to date.");
+				} else {
+					System.out.println("The files that needs to be backed up is:");
+					for (File tempFile : tempDirectory.listFiles()) {
+						System.out.println(tempFile.getName());
+						tempFile.delete();
+					}
+				}
+				tempDirectory.delete();
 			}
-			tempDirectory.delete();
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -106,8 +111,8 @@ public class SynchronisationClient {
 	}
 
 	public void quit() {
-		receiver.stop();
-		sender.stop();
+		receiver.requestStop();
+		sender.requestStop();
 	}
 
 	public static void main(String[] args) {
