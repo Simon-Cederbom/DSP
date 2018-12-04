@@ -117,6 +117,13 @@ class Connection extends Thread {
 	public void requestStop() {
 		stop = true;
 	}
+	
+	public void deleteDirectory(File folder) {
+		for(File file : folder.listFiles()) {
+			file.delete();
+		}
+		folder.delete();
+	}
 
 	public void run() {
 		FileOutputStream fileOutStream = null;
@@ -125,6 +132,7 @@ class Connection extends Thread {
 			while (!stop) {
 				String command = in.readUTF();
 				if (command.equals("-quit")) {
+					deleteDirectory(new File(id));
 					requestStop();
 					out.writeUTF(command);
 				} else if(command.equals("-sync")){
@@ -150,22 +158,13 @@ class Connection extends Thread {
 						out.writeUTF(file.getName());
 						out.writeInt(bytes.length);
 						out.write(bytes);
+						fileInStream.close();
 					}
-					for (File tempFile : tempDirectory.listFiles()) {
-						String name = tempFile.getName();
-						if(name.equals("")) {
-							int i = 0;
-						}
-						tempFile.delete();
-					}
-					tempDirectory.delete();
 					directory.clear();
+					diff.clear();
+					deleteDirectory(tempDirectory);
 				}
 			}
-//			for(File file : diff) {
-//				System.out.println(file.getName());
-//			}
-
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
