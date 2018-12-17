@@ -38,13 +38,15 @@ public class YahtzeeServer {
 }
 
 class Connection extends Thread {
-	DataInputStream in;
-	DataOutputStream out;
-	Socket clientSocket;
-	YahtzeeServer server;
-	GameRoom gameRoom;
-	boolean ready = false;
-	boolean stop = false;
+	private DataInputStream in;
+	private DataOutputStream out;
+	private Socket clientSocket;
+	private YahtzeeServer server;
+	private GameRoom gameRoom;
+	private boolean ready = false;
+	private boolean stop = false;
+	private int[] score = new int[16];
+	
 
 	public Connection(Socket aClientSocket, YahtzeeServer s) {
 		try {
@@ -96,6 +98,14 @@ class Connection extends Thread {
 	
 	public void resetReady() {
 		ready = false;
+	}
+	
+	public int[] getScore() {
+		return score;
+	}
+	
+	public void setScore(int[] newScore) {
+		score = newScore;
 	}
 	
 	public void run() {
