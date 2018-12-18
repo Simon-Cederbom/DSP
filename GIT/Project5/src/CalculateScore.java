@@ -24,10 +24,10 @@ public class CalculateScore {
 			return saveNumber(dices, 6);
 		}
 		if (save.equals("three of a kind")) {
-			return threeOfKind(dices, kind);
+			return threeOfKind(dices);
 		}
 		if (save.equals("four of a kind")) {
-			return fourOfKind(dices, kind);
+			return fourOfKind(dices);
 		}
 		if (save.equals("full house")) {
 			return fullHouse(dices);
@@ -113,7 +113,19 @@ public class CalculateScore {
 		return 0;
 	}
 
-	private static int fourOfKind(int[] dices, int kind) {
+	private static int fourOfKind(int[] dices) {
+		int kind = -1;
+		int[] amountDices = new int[6];
+		for (int i = 0; i < amountDices.length; i++) {
+			amountDices[dices[i]]++;
+		}
+		for (int i = 0; i < amountDices.length; i++) {
+			if(amountDices[i] >= 4) {
+				kind = amountDices[i];
+				break;
+			}
+		}
+		if(kind == -1) return 0;
 		int sum = 0;
 		int isFour = 0;
 		for (int i = 0; i < dices.length; i++) {
@@ -127,7 +139,19 @@ public class CalculateScore {
 		return sum;
 	}
 
-	private static int threeOfKind(int[] dices, int kind) {
+	private static int threeOfKind(int[] dices) {
+		int kind = -1;
+		int[] amountDices = new int[6];
+		for (int i = 0; i < amountDices.length; i++) {
+			amountDices[dices[i]]++;
+		}
+		for (int i = 0; i < amountDices.length; i++) {
+			if(amountDices[i] >= 3) {
+				kind = amountDices[i];
+				break;
+			}
+		}
+		if(kind == -1) return 0;
 		int sum = 0;
 		int isThree = 0;
 		for (int i = 0; i < dices.length; i++) {
