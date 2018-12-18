@@ -1,7 +1,7 @@
 
 public class CalculateScore {
 
-	public static int calculate(int[] dices, String save, int kind) {
+	public static int calculate(int[] dices, String save) {
 
 		save = save.toLowerCase();
 
