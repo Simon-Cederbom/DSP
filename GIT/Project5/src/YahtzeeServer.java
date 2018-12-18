@@ -43,6 +43,7 @@ class Connection extends Thread {
 	private Socket clientSocket;
 	private YahtzeeServer server;
 	private GameRoom gameRoom;
+	private String playerName;
 	private boolean ready = false;
 	private boolean stop = false;
 	private int[] score = new int[16];
@@ -100,26 +101,48 @@ class Connection extends Thread {
 		ready = false;
 	}
 	
+	public String getPlayerName() {
+		return playerName;
+	}
+	
+	public void setPlayerName(String name) {
+		playerName = name;
+	}
+	
 	public int[] getScore() {
 		return score;
 	}
 	
-	public void setScore(int[] newScore) {
-		score = newScore;
+	public void setScore(int index, int newScore) {
+		score[index] = newScore;
+	}
+	
+	public String readUserInput() {
+		try {
+			String response = in.readUTF();
+			return response;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return "";
+		}
 	}
 	
 	public void run() {
 		while(!stop) {
-			try {
-				String message = in.readUTF();
+//			try {
+				String message = readUserInput();
 				if(message.equals("yes")) {
 					ready = true;
 					gameRoom.playerReady(this);
 				}
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+				while(true) {
+					
+				}
+//			} catch (IOException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
 		}
 	}
 }

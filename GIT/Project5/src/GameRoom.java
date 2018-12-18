@@ -4,6 +4,8 @@ public class GameRoom extends Thread {
 	private List<Connection> players;
 	private String name;
 	private int readyCounter = 0;
+	private int playerNumber = 0;
+	private boolean gameRunning = false;
 	private String scoreboard;
 	private String[] scoreRows = { "Ones", "Twos", "Threes", "Fours", "Fives", "Sixes", "Sum", "Bonus",
 			"Three of a kind", "Four of a kind", "Full House", "Small Straight", "Large Straight", "Chance", "YAHTZEE",
@@ -19,10 +21,16 @@ public class GameRoom extends Thread {
 	}
 
 	public void addPlayer(Connection player) {
+		playerNumber++;
+		player.setPlayerName("Player" + playerNumber);
 		players.add(player);
-		player.send("Welcome to " + name + "!");
+		player.send("Welcome " + player.getPlayerName() + " to " + name + "!");
 		if (players.size() <= 1) {
 			player.send("Waiting on more players...");
+		} else if (!gameRunning) {
+			player.send("Are you ready to start?");
+		} else {
+			player.send("Wait for the current game to finish...");
 		}
 	}
 
@@ -37,13 +45,14 @@ public class GameRoom extends Thread {
 		players.remove(player);
 	}
 
-	public int[] generateDices() {
+	public int generateDice() {
 		Random random = new Random();
-		int[] dices = new int[5];
-		for (int i = 0; i < dices.length; i++) {
-			dices[i] = random.nextInt(6) + 1;
-		}
-		return dices;
+		return random.nextInt(6) + 1;
+//		int[] dices = new int[5];
+//		for (int i = 0; i < dices.length; i++) {
+//			dices[i] = 
+//		}
+//		return dices;
 	}
 
 	private void sendToPlayers(String message) {
@@ -55,8 +64,8 @@ public class GameRoom extends Thread {
 	private void updateScoreBoard() {
 		String separator = "---------------";
 		scoreboard = "\t\t";
-		for (int i = 1; i <= players.size(); i++) {
-			scoreboard += "Player" + i + " ";
+		for (int i = 0; i < players.size(); i++) {
+			scoreboard += players.get(i).getPlayerName() + " ";
 			separator += "--------";
 		}
 		for (int i = 0; i < scoreRows.length; i++) {
@@ -87,43 +96,67 @@ public class GameRoom extends Thread {
 	}
 
 	public void startGame() {
+		gameRunning = true;
 		for (Connection player : players) {
-			int[] score = new int[16];
 			for (int i = 0; i < 16; i++) {
-				score[i] = -1;
+				player.setScore(i, -1);
 			}
-			player.setScore(score);
 		}
 		updateScoreBoard();
-		sendToPlayers(scoreboard);
-//		for (int i = 0; i < players.size(); i++) {
-//			int[] dices = generateDices();
-//			String message = "Player" + (i + 1) + ":\n" + "Dice1: " + dices[0] + " Dice2: " + dices[1] + " Dice3: "
-//					+ dices[2] + " Dice4: " + dices[3] + " Dice5: " + dices[4];
-//			sendToPlayers(message + "\n\nScoreboard:\n" + scoreboard);
-//		}
+		for (int i = 0; i < players.size() * 13; i++) {
+			for (Connection player : players) {
+				boolean[] savedDices = { false, false, false, false, false };
+				int[] dices = new int[5];
+				for (int j = 0; j < 3; j++) {
+					for (int k = 0; k < dices.length; k++) {
+						if (!savedDices[k]) {
+							dices[k] = generateDice();
+						} else {
+							savedDices[k] = false;
+						}
+					}
+					String message = player.getPlayerName() + ":\nDice1: " + dices[0] + " Dice2: " + dices[1]
+							+ " Dice3: " + dices[2] + " Dice4: " + dices[3] + " Dice5: " + dices[4] + "\nScoreboard:\n"
+							+ scoreboard;
+					sendToPlayers(message);
+					String response = player.readUserInput();
+					if (response.equals("save")) {
+						break;
+					} else if (response.contains(",")) {
+						String[] dicesToSave = response.split(",");
+						for (int k = 0; k < dicesToSave.length; k++) {
+							savedDices[Integer.parseInt(dicesToSave[k]) - 1] = true;
+						}
+					} else if(!response.equals("0")){
+						savedDices[Integer.parseInt(response) - 1] = true;
+					}
+				}
+				player.send("What score do you want to set?");
+				// calculate score
+			}
+		}
 	}
 
 	public void run() {
-		while (players.size() <= 1) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+		while (true) {
+			while (players.size() <= 1) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
-		}
-		for (Connection player : players) {
-			player.send("Are you ready to start?");
-		}
-		while (readyCounter != players.size()) {
-			try {
-				Thread.sleep(10);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+			players.get(0).send("Are you ready to start?");
+			while (readyCounter != players.size()) {
+				try {
+					Thread.sleep(10);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 			}
+			startGame();
 		}
-		startGame();
 	}
 }
