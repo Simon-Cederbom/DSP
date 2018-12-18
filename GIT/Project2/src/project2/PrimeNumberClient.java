@@ -17,22 +17,36 @@ public class PrimeNumberClient {
 		ClientConfig config = new ClientConfig();
 		Client client = ClientBuilder.newClient(config);
 		WebTarget target = client.target(getBaseURI());
-
+		
 		Scanner scanner = new Scanner(System.in);
 		int inputNumber;
+		boolean unListed = false;
+
 		while (true) {
+			unListed = false;
 			System.out.println("Enter an integer to check if it is a prime number.");
 			inputNumber = scanner.nextInt();
 			String primeAwnser = target.path("checkPrime").path("" + inputNumber).request().accept(MediaType.TEXT_PLAIN)
 					.get(String.class);
-			if(primeAwnser == "-1") {
+			if (primeAwnser.equals("-1")) {
+				unListed = true;
 				System.out.println(inputNumber + " is not listed in server. Calculating on client.");
 				primeAwnser = calculatePrime(inputNumber);
 			}
-			if(primeAwnser == "1") System.out.println(inputNumber + " is a prime number");
-			else System.out.println(inputNumber + " is not a prime number");
+			if (primeAwnser.equals("1")) {
+				System.out.println(inputNumber + " is a prime number");
+				if (unListed) {
+					target.path("addPrime").path("" + inputNumber).request().accept(MediaType.TEXT_PLAIN)
+							.get(String.class);
+				}
+			} else {
+				System.out.println(inputNumber + " is not a prime number");
+				if (unListed) {
+					target.path("addNonPrime").path("" + inputNumber).request().accept(MediaType.TEXT_PLAIN)
+							.get(String.class);
+				}
+			}
 		}
-
 	}
 
 	private static URI getBaseURI() {
