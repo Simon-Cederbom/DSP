@@ -122,8 +122,14 @@ public class SynchronisationClient {
 		c.receiver.start();
 		c.sender = new CommandSender(c, scanner);
 		c.sender.start();
-		while (c.receiver.isAlive() && c.sender.isAlive()) {
+		while (c.receiver.isAlive() || c.sender.isAlive()) {
 
+		}
+		try {
+			c.s.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 	}
 }
