@@ -26,6 +26,10 @@ public class GameRoom extends Thread {
 	}
 
 	public void addPlayer(Connection player) {
+		if(player.getReadOnly()) {
+			players.add(player);
+			return;
+		}
 		playerNumber++;
 		player.setPlayerName("Player" + playerNumber);
 		players.add(player);
@@ -67,6 +71,9 @@ public class GameRoom extends Thread {
 		String separator = "---------------";
 		scoreboard = "\t\t";
 		for (int i = 0; i < players.size(); i++) {
+			if(!players.get(i).getPlaying() || players.get(i).getReadOnly()) {
+				continue;
+			}
 			scoreboard += players.get(i).getPlayerName() + " ";
 			separator += "--------";
 		}
@@ -87,6 +94,9 @@ public class GameRoom extends Thread {
 			scoreboard += "\t";
 		}
 		for (Connection player : players) {
+			if(!player.getPlaying() || player.getReadOnly()) {
+				continue;
+			}
 			scoreboard += "\t  ";
 			int score = player.getScore()[index];
 			if (score == -1) {
@@ -103,11 +113,15 @@ public class GameRoom extends Thread {
 			for (int i = 0; i < 16; i++) {
 				player.setScore(i, -1);
 				player.setReady(false);
+				player.setPlaying(true);
 			}
 		}
 		updateScoreBoard();
 		for (int i = 0; i < 13; i++) {
 			for (Connection player : players) {
+				if(!player.getPlaying() || player.getReadOnly()) {
+					continue;
+				}
 				player.setReady(true);
 				boolean[] savedDices = { false, false, false, false, false };
 				int[] dices = new int[5];

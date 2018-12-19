@@ -5,7 +5,8 @@ import java.util.*;
 public class YahtzeeServer {
 	public static final int PORT = 5679;
 	private List<GameRoom> gameRooms = new ArrayList<GameRoom>();
-	private int[] highScore = new int[16];
+	// private int[] highScore = new int[16];
+	private int[] highScore = { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
 
 	public List<GameRoom> getGameRooms() {
 		return gameRooms;
@@ -19,8 +20,17 @@ public class YahtzeeServer {
 		highScore = score;
 	}
 
-	public int[] getHighScore() {
-		return highScore;
+	public String getHighScore() {
+		if (highScore[7] == -1) {
+			highScore[7] = 0;
+		}
+		return "Ones\t\t" + highScore[0] + "\nTwos\t\t" + highScore[1] + "\nThrees\t\t" + highScore[2] + "\nFours\t\t"
+				+ highScore[3] + "\nFives\t\t" + highScore[4] + "\nSixes\t\t" + highScore[5]
+				+ "\n-----------------------\nSum\t\t" + highScore[6] + "\nBonus\t\t" + highScore[7] +
+				"\n-----------------------\nThree of a kind\t" + highScore[8] + "\nFour of a kind\t"
+				+ highScore[9] + "\nFull House\t" + highScore[10] + "\nSmall Straight\t" + highScore[11]
+				+ "\nLarge Straight\t" + highScore[12] + "\nChance\t\t" + highScore[13] + "\nYAHTZEE\t\t" +
+				highScore[14] + "\n-----------------------\nTotal\t\t" + highScore[15];
 	}
 
 	public static void main(String[] args) {
@@ -56,7 +66,8 @@ class Connection extends Thread {
 	private boolean ready = false;
 	private boolean stop = false;
 	private int[] score = new int[16];
-	String test = "";
+	private boolean readOnly = false;
+	private boolean playing = false;
 
 	public Connection(Socket aClientSocket, YahtzeeServer s) {
 		try {
@@ -65,18 +76,32 @@ class Connection extends Thread {
 			in = new DataInputStream(clientSocket.getInputStream());
 			out = new DataOutputStream(clientSocket.getOutputStream());
 			server = s;
-			List<GameRoom> gameRooms = server.getGameRooms();
-			String message = "Available game rooms: \n";
-			int i = 0;
-			for (GameRoom room : gameRooms) {
-				i++;
-				message += i + ": " + room.getRoomName() + "\n";
-			}
-			if (i == 0) {
-				message += "No game rooms available.\n";
-			}
-			message += "\nType + to add a new game room.";
+
+		} catch (IOException e) {
+			System.out.println("Connection:" + e.getMessage());
+		}
+	}
+
+	public void showGameRooms() {
+		List<GameRoom> gameRooms = server.getGameRooms();
+		String message = "Available game rooms: \n";
+		int i = 0;
+		for (GameRoom room : gameRooms) {
+			i++;
+			message += i + ": " + room.getRoomName() + "\n";
+		}
+		if (i == 0) {
+			message += "No game rooms available.\n";
+		}
+		message += "\nType + to add a new game room.";
+		try {
 			out.writeUTF(message);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		boolean correctInput = false;
+		while (!correctInput) {
 			message = readUserInput();
 			if (message.equals("+")) {
 				GameRoom room = new GameRoom("gameRoom" + (gameRooms.size() + 1));
@@ -84,16 +109,25 @@ class Connection extends Thread {
 				server.addGameRoom(room);
 				gameRoom = room;
 				room.start();
+				correctInput = true;
 			} else {
 				for (GameRoom room : gameRooms) {
-					if (room.getRoomName().equals("gameRoom" + message)) {
+					String[] messages = new String[1];
+					if (message.contains(" ")) {
+						messages = message.split(" ");
+					} else {
+						messages[0] = message;
+					}
+					if (room.getRoomName().equals("gameRoom" + messages[0])) {
+						if (messages.length > 1 && messages[1].equals("read-only")) {
+							readOnly = true;
+						}
 						room.addPlayer(this);
 						gameRoom = room;
+						correctInput = true;
 					}
 				}
 			}
-		} catch (IOException e) {
-			System.out.println("Connection:" + e.getMessage());
 		}
 	}
 
@@ -105,7 +139,7 @@ class Connection extends Thread {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void setReady(boolean set) {
 		ready = set;
 	}
@@ -163,15 +197,21 @@ class Connection extends Thread {
 		try {
 			out.writeUTF("read");
 			String response = in.readUTF();
-			if(response.equals("blablabla")) {
-				System.out.println("Hejsan svejsan");
-			}
-			if (response.equals("yes")) {
-				gameRoom.playerReady(this);
-				return "";
+			if (response.equals("exit")) {
+				gameRoom.removePlayer(this);
+				showGameRooms();
+			} else if (response.equals("HighScore")) {
+				out.writeUTF(server.getHighScore());
 			} else {
 				return response;
 			}
+
+//			if (response.equals("yes")) {
+//				gameRoom.playerReady(this);
+//				return "";
+//			} else {
+//				return response;
+//			}
 		} catch (SocketTimeoutException ste) {
 			return "timed out";
 		} catch (EOFException eofe) {
@@ -186,7 +226,20 @@ class Connection extends Thread {
 		server.setHighScore(score);
 	}
 
+	public boolean getReadOnly() {
+		return readOnly;
+	}
+
+	public void setPlaying(boolean isPlaying) {
+		playing = isPlaying;
+	}
+
+	public boolean getPlaying() {
+		return playing;
+	}
+
 	public void run() {
+		showGameRooms();
 		while (!stop) {
 			try {
 				Thread.sleep(10);
@@ -194,9 +247,15 @@ class Connection extends Thread {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			if (!ready) {
-				test = readUserInput();
+//			if (!ready) {
+
+			if (!ready && readUserInput().equals("yes")) {
+				gameRoom.playerReady(this);
+				// return "";
 			}
+
+//				;
+//			}
 		}
 	}
 }
