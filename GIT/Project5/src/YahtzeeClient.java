@@ -8,7 +8,8 @@ public class YahtzeeClient {
 	DataOutputStream out;
 	Receiver receiver;
 	Sender sender;
-	
+	boolean read = false;
+
 	public YahtzeeClient() {
 		try {
 			s = new Socket("localhost", YahtzeeServer.PORT);
@@ -19,38 +20,43 @@ public class YahtzeeClient {
 			sender.start();
 			receiver = new Receiver(this);
 			receiver.start();
-		}
-		catch (UnknownHostException e) {
+		} catch (UnknownHostException e) {
 			System.out.println("Sock:" + e.getMessage());
-		}
-		catch (IOException e) {
+		} catch (IOException e) {
 			System.out.println("IO:" + e.getMessage());
 		}
 	}
-	
+
 	public void receive() {
 		try {
 			String message = in.readUTF();
-			System.out.println(message);
+			if (message.equals("read")) {
+				read = true;
+			} else {
+				System.out.println(message);
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 	public void send(String message) {
 		try {
-			out.writeUTF(message);
+			if (read) {
+				out.writeUTF(message);
+				read = false;
+			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static void main(String[] args) {
 		YahtzeeClient c = new YahtzeeClient();
-		while(true) {
-			
+		while (true) {
+
 		}
 //		while(c.sender.isAlive() || c.receiver.isAlive()) {
 //			

@@ -58,14 +58,14 @@ public class CalculateScore {
 	}
 
 	private static int chance(int[] dices) {
-		return dices[0] + dices[1] + dices[2] + dices[3] + dices[4] + dices[5];
+		return dices[0] + dices[1] + dices[2] + dices[3] + dices[4];
 	}
 
 	private static int largeStraight(int[] dices) {
 		boolean[] diceSum = { false, false, false, false, false, false };
 
 		for (int i = 0; i < dices.length; i++) {
-			diceSum[dices[i]] = true;
+			diceSum[dices[i] - 1] = true;
 		}
 
 		if ((diceSum[0] && diceSum[1] && diceSum[2] && diceSum[3] && diceSum[4]))
@@ -80,7 +80,7 @@ public class CalculateScore {
 		boolean[] diceSum = { false, false, false, false, false, false };
 
 		for (int i = 0; i < dices.length; i++) {
-			diceSum[dices[i]] = true;
+			diceSum[dices[i] - 1] = true;
 		}
 
 		if ((diceSum[0] && diceSum[1] && diceSum[2] && diceSum[3]))
@@ -99,7 +99,7 @@ public class CalculateScore {
 		int[] diceAmount = new int[6];
 
 		for (int i = 0; i < dices.length; i++) {
-			diceAmount[dices[i]]++;
+			diceAmount[dices[i] - 1]++;
 		}
 		for (int i = 0; i < diceAmount.length; i++) {
 			if (diceAmount[i] == 2)
@@ -116,12 +116,12 @@ public class CalculateScore {
 	private static int fourOfKind(int[] dices) {
 		int kind = -1;
 		int[] amountDices = new int[6];
-		for (int i = 0; i < amountDices.length; i++) {
-			amountDices[dices[i]]++;
+		for (int i = 0; i < dices.length; i++) {
+			amountDices[dices[i] - 1]++;
 		}
 		for (int i = 0; i < amountDices.length; i++) {
 			if(amountDices[i] >= 4) {
-				kind = amountDices[i];
+				kind = i + 1;
 				break;
 			}
 		}
@@ -142,12 +142,12 @@ public class CalculateScore {
 	private static int threeOfKind(int[] dices) {
 		int kind = -1;
 		int[] amountDices = new int[6];
-		for (int i = 0; i < amountDices.length; i++) {
-			amountDices[dices[i]]++;
+		for (int i = 0; i < dices.length; i++) {
+			amountDices[dices[i] - 1]++;
 		}
 		for (int i = 0; i < amountDices.length; i++) {
 			if(amountDices[i] >= 3) {
-				kind = amountDices[i];
+				kind = i + 1;
 				break;
 			}
 		}
