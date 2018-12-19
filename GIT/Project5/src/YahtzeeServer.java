@@ -56,6 +56,7 @@ class Connection extends Thread {
 	private boolean ready = false;
 	private boolean stop = false;
 	private int[] score = new int[16];
+	String test = "";
 
 	public Connection(Socket aClientSocket, YahtzeeServer s) {
 		try {
@@ -187,23 +188,15 @@ class Connection extends Thread {
 
 	public void run() {
 		while (!stop) {
-			//readUserInput();
-			if (!ready) {
-				readUserInput();
+			try {
+				Thread.sleep(10);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-//			try {
-//			String message = readUserInput();
-//			if (message.equals("yes")) {
-//				ready = true;
-//				gameRoom.playerReady(this);
-//			}
-//			while (true) {
-//				
-//			}
-//			} catch (IOException e) {
-//				// TODO Auto-generated catch block
-//				e.printStackTrace();
-//			}
+			if (!ready) {
+				test = readUserInput();
+			}
 		}
 	}
 }

@@ -45,7 +45,7 @@ public class CalculateScore {
 			return yahtzee(dices);
 		}
 
-		return 0;
+		return -1;
 	}
 
 	private static int yahtzee(int[] dices) {

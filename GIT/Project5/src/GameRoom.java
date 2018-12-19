@@ -20,7 +20,7 @@ public class GameRoom extends Thread {
 	public String getRoomName() {
 		return name;
 	}
-	
+
 	public boolean gameRunning() {
 		return gameRunning;
 	}
@@ -34,8 +34,8 @@ public class GameRoom extends Thread {
 			player.send("Waiting on more players...");
 		} else if (waiting) {
 			player.send("Are you ready to start?");
-			//player.readUserInput();
-		} else if(gameRunning){
+			// player.readUserInput();
+		} else if (gameRunning) {
 			player.send("Wait for the current game to finish...");
 		}
 	}
@@ -125,34 +125,57 @@ public class GameRoom extends Thread {
 							+ "\nScoreboard:\n" + scoreboard;
 					sendToPlayers(message);
 					if (j != 2) {
-						String response = player.readUserInput();
-						if(response.equals("timed out") || response.equals("disconnected")) {
-							player.setScore(-1, 0);
-							updateScoreBoard();
-							skip = true;
-							break;
-						}
-						if (response.equals("save")) {
-							break;
-						} else if (response.contains(",")) {
-							String[] dicesToSave = response.split(",");
-							for (int k = 0; k < dicesToSave.length; k++) {
-								savedDices[Integer.parseInt(dicesToSave[k]) - 1] = true;
+						boolean correctInput = false;
+						boolean saveResult = false;
+						while (!correctInput) {
+							String response = player.readUserInput();
+							if (response.equals("timed out") || response.equals("disconnected")) {
+								player.setScore(-1, 0);
+								updateScoreBoard();
+								skip = true;
+								break;
 							}
-						} else if (!response.equals("0")) {
-							savedDices[Integer.parseInt(response) - 1] = true;
+							if (response.equals("save")) {
+								saveResult = true;
+							} else if (response.contains(",")) {
+								String[] dicesToSave = response.split(",");
+								for (int k = 0; k < dicesToSave.length; k++) {
+									try {
+										savedDices[Integer.parseInt(dicesToSave[k]) - 1] = true;
+									} catch (Exception e) {
+										continue;
+									}
+								}
+							} else if (!response.equals("0")) {
+								try {
+									savedDices[Integer.parseInt(response) - 1] = true;
+								} catch (Exception e) {
+									continue;
+								}
+							}
+							correctInput = true;
+						}
+						if(saveResult) {
+							break;
 						}
 					}
 				}
-				if(skip) {
+				if (skip) {
 					continue;
 				}
 				player.send("What score do you want to set?");
-				String scoreToSave = player.readUserInput();
+				int score = -1;
+				String scoreToSave = "";
+				while(score == -1) {
+					scoreToSave = player.readUserInput();
+					if(scoreToSave.equals("timed out") || scoreToSave.equals("disconnected")) {
+						break;
+					}
+					score = CalculateScore.calculate(dices, scoreToSave);
+				}
 				if (scoreToSave.equals("timed out") || scoreToSave.equals("disconnected")) {
 					player.setScore(-1, 0);
 				} else {
-					int score = CalculateScore.calculate(dices, scoreToSave);
 					for (int k = 0; k < scoreRows.length; k++) {
 						if (scoreRows[k].toLowerCase().equals(scoreToSave.toLowerCase())) {
 							player.setScore(k, score);
@@ -163,12 +186,12 @@ public class GameRoom extends Thread {
 				updateScoreBoard();
 				player.setReady(false);
 			}
-			
+
 		}
 		Connection playerWithHighestScore = players.get(0);
 		for (Connection player : players) {
 			player.setScore(15, 0);
-			if(player.getScore()[15] > playerWithHighestScore.getScore()[15]) {
+			if (player.getScore()[15] > playerWithHighestScore.getScore()[15]) {
 				playerWithHighestScore = player;
 			}
 			player.setReady(false);
@@ -190,12 +213,7 @@ public class GameRoom extends Thread {
 					e.printStackTrace();
 				}
 			}
-//			for(Connection player : players) {
-//				player.send("Are you ready to start?");
-//				player.readUserInput();
-//			}
 			sendToPlayers("Are you ready to start?");
-			//players.get(0).send("Are you ready to start?");
 			waiting = true;
 			while (readyCounter != players.size()) {
 				try {
