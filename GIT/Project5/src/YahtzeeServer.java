@@ -6,8 +6,6 @@ public class YahtzeeServer {
 	public static final int PORT = 5679;
 	private List<GameRoom> gameRooms = new ArrayList<GameRoom>();
 	private int[] highScore = new int[16];
-	// private int[] highScore = { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
-	// 10, 10, 10, 10 };
 
 	public List<GameRoom> getGameRooms() {
 		return gameRooms;
@@ -64,7 +62,6 @@ class Connection extends Thread {
 	private YahtzeeServer server;
 	private GameRoom gameRoom;
 	private String playerName;
-	private boolean ready = false;
 	private boolean stop = false;
 	private int[] score = new int[16];
 	private boolean readOnly = false;
@@ -104,10 +101,9 @@ class Connection extends Thread {
 			e.printStackTrace();
 		}
 		boolean correctInput = false;
-		while (!correctInput) {
+		while (!correctInput && !stop) {
 			readUserInput();
 			message = userMessage;
-			//message = readUserInput();
 			if (message.equals("+")) {
 				GameRoom room = new GameRoom("gameRoom" + (gameRooms.size() + 1));
 				room.addPlayer(this);
@@ -143,10 +139,6 @@ class Connection extends Thread {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
-
-	public void setReady(boolean set) {
-		ready = set;
 	}
 
 	public String getPlayerName() {
@@ -191,7 +183,7 @@ class Connection extends Thread {
 		}
 		if (index == 15 && score[0] != -1) {
 			int sum = score[6];
-			if(score[7] != -1) {
+			if (score[7] != -1) {
 				sum += score[7];
 			}
 			for (int i = 8; i < score.length; i++) {
@@ -203,9 +195,13 @@ class Connection extends Thread {
 
 	public void readUserInput() {
 		try {
-			int i = 0;
 			out.writeUTF("read");
 			String response = in.readUTF();
+			if(response.equals("quit")) {
+				requestStop();
+				out.writeUTF(response);
+				return;
+			}
 			if (response.equals("exit")) {
 				gameRoom.removePlayer(this);
 				showGameRooms();
@@ -215,30 +211,18 @@ class Connection extends Thread {
 				gameRoom.playerReady(this);
 			} else {
 				userMessage = response;
-				i += 1;
 				return;
-				//return response;
 			}
-
-//			if (response.equals("yes")) {
-//				gameRoom.playerReady(this);
-//				return "";
-//			} else {
-//				return response;
-//			}
 		} catch (SocketTimeoutException ste) {
 			userMessage = "timed out";
 			return;
-			//return "timed out";
 		} catch (EOFException eofe) {
 			userMessage = "disconnected";
 			return;
-			//return "disconnected";
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
 		userMessage = "";
-		//return "";
 	}
 
 	public void setHighScore() {
@@ -256,49 +240,37 @@ class Connection extends Thread {
 	public boolean getPlaying() {
 		return playing;
 	}
-	
+
 	public String getUserMessage() {
 		return userMessage;
 	}
-	
+
 	public void setUserMessage(String message) {
 		userMessage = message;
 	}
-	
+
 	public void setRemoved(boolean removed) {
 		isRemoved = removed;
 	}
-	
+
 	public boolean getRemoved() {
 		return isRemoved;
+	}
+	
+	public void requestStop() {
+		stop = true;
 	}
 
 	public void run() {
 		showGameRooms();
 		while (!stop) {
-			
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-//			if (!ready) {
-				readUserInput();
-//				String message = readUserInput();
-//				if(message.equals("yes")) {
-//					gameRoom.playerReady(this);
-//				}
-//			}
-//			if (!ready) {
-
-//			if (!ready && readUserInput().equals("yes")) {
-//				gameRoom.playerReady(this);
-//				// return "";
-//			}
-
-//				;
-//			}
+			readUserInput();
 		}
 	}
 }

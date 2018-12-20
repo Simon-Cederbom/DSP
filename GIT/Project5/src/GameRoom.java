@@ -45,13 +45,11 @@ public class GameRoom extends Thread {
 				player.send("Waiting on more players...");
 			} else if (waiting) {
 				player.send("Are you ready to start?");
-				// player.readUserInput();
 			}
 		}
 	}
 
 	public void playerReady(Connection player) {
-		player.setReady(true);
 		readyCounter++;
 		if (readyCounter != activePlayers.size()) {
 			player.send("Waiting for all to be ready...");
@@ -129,8 +127,6 @@ public class GameRoom extends Thread {
 		for (Connection player : activePlayers) {
 			for (int i = 0; i < 16; i++) {
 				player.setScore(i, -1);
-				// player.setReady(false);
-				//player.setPlaying(true);
 			}
 		}
 		updateScoreBoard();
@@ -142,11 +138,9 @@ public class GameRoom extends Thread {
 					iterator.remove();
 					continue;
 				}
-				// for (Connection player : players) {
 				if (!player.getPlaying() || player.getReadOnly()) {
 					continue;
 				}
-				// player.setReady(true);
 				boolean[] savedDices = { false, false, false, false, false };
 				int[] dices = new int[5];
 				boolean skip = false;
@@ -168,7 +162,6 @@ public class GameRoom extends Thread {
 						while (!correctInput) {
 							String response = player.getUserMessage();
 							player.setUserMessage("");
-							// String response = player.readUserInput();
 							if (response.equals("timed out") || response.equals("disconnected")) {
 								player.setScore(-1, 0);
 								updateScoreBoard();
@@ -205,9 +198,7 @@ public class GameRoom extends Thread {
 				}
 				player.send("What score do you want to set?");
 				int score = -1;
-				// String scoreToSave = "";
 				while (score == -1) {
-					// scoreToSave = player.readUserInput();
 					if (player.getUserMessage().equals("timed out") || player.getUserMessage().equals("disconnected")) {
 						break;
 					}
@@ -224,7 +215,6 @@ public class GameRoom extends Thread {
 					}
 				}
 				updateScoreBoard();
-				// player.setReady(false);
 			}
 
 		}
@@ -234,7 +224,6 @@ public class GameRoom extends Thread {
 			if (player.getScore()[15] > playerWithHighestScore.getScore()[15]) {
 				playerWithHighestScore = player;
 			}
-			player.setReady(false);
 		}
 		playerWithHighestScore.setHighScore();
 		updateScoreBoard();
@@ -264,7 +253,6 @@ public class GameRoom extends Thread {
 				player.setPlaying(true);
 				player.send("Are you ready to start?");
 			}
-			//sendToPlayers("Are you ready to start?");
 			waiting = true;
 			while (readyCounter != activePlayers.size()) {
 				try {

@@ -30,7 +30,9 @@ public class YahtzeeClient {
 	public void receive() {
 		try {
 			String message = in.readUTF();
-			if (message.equals("read")) {
+			if (message.equals("quit")) {
+				return;
+			} else if (message.equals("read")) {
 				read = true;
 			} else {
 				System.out.println(message);
@@ -41,8 +43,16 @@ public class YahtzeeClient {
 		}
 	}
 
+	public void requestStop() {
+		sender.requestStop();
+		receiver.requestStop();
+	}
+
 	public void send(String message) {
 		try {
+			if (message.equals("quit")) {
+				requestStop();
+			}
 			if (read) {
 				out.writeUTF(message);
 				read = false;
@@ -55,16 +65,16 @@ public class YahtzeeClient {
 
 	public static void main(String[] args) {
 		YahtzeeClient c = new YahtzeeClient();
-		while (true) {
+//		while (true) {
+//
+//		}
+		while (c.sender.isAlive() || c.receiver.isAlive()) {
 
 		}
-//		while(c.sender.isAlive() || c.receiver.isAlive()) {
-//			
-//		}
-//		try {
-//			c.s.close();
-//		} catch (IOException e) {
-//			System.out.println("IO: " + e.getMessage());
-//		}
+		try {
+			c.s.close();
+		} catch (IOException e) {
+			System.out.println("IO: " + e.getMessage());
+		}
 	}
 }
