@@ -5,8 +5,9 @@ import java.util.*;
 public class YahtzeeServer {
 	public static final int PORT = 5679;
 	private List<GameRoom> gameRooms = new ArrayList<GameRoom>();
-	// private int[] highScore = new int[16];
-	private int[] highScore = { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10 };
+	private int[] highScore = new int[16];
+	// private int[] highScore = { 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+	// 10, 10, 10, 10 };
 
 	public List<GameRoom> getGameRooms() {
 		return gameRooms;
@@ -26,11 +27,11 @@ public class YahtzeeServer {
 		}
 		return "Ones\t\t" + highScore[0] + "\nTwos\t\t" + highScore[1] + "\nThrees\t\t" + highScore[2] + "\nFours\t\t"
 				+ highScore[3] + "\nFives\t\t" + highScore[4] + "\nSixes\t\t" + highScore[5]
-				+ "\n-----------------------\nSum\t\t" + highScore[6] + "\nBonus\t\t" + highScore[7] +
-				"\n-----------------------\nThree of a kind\t" + highScore[8] + "\nFour of a kind\t"
-				+ highScore[9] + "\nFull House\t" + highScore[10] + "\nSmall Straight\t" + highScore[11]
-				+ "\nLarge Straight\t" + highScore[12] + "\nChance\t\t" + highScore[13] + "\nYAHTZEE\t\t" +
-				highScore[14] + "\n-----------------------\nTotal\t\t" + highScore[15];
+				+ "\n-----------------------\nSum\t\t" + highScore[6] + "\nBonus\t\t" + highScore[7]
+				+ "\n-----------------------\nThree of a kind\t" + highScore[8] + "\nFour of a kind\t" + highScore[9]
+				+ "\nFull House\t" + highScore[10] + "\nSmall Straight\t" + highScore[11] + "\nLarge Straight\t"
+				+ highScore[12] + "\nChance\t\t" + highScore[13] + "\nYAHTZEE\t\t" + highScore[14]
+				+ "\n-----------------------\nTotal\t\t" + highScore[15];
 	}
 
 	public static void main(String[] args) {
@@ -68,6 +69,8 @@ class Connection extends Thread {
 	private int[] score = new int[16];
 	private boolean readOnly = false;
 	private boolean playing = false;
+	private String userMessage = "";
+	private boolean isRemoved = false;
 
 	public Connection(Socket aClientSocket, YahtzeeServer s) {
 		try {
@@ -102,7 +105,9 @@ class Connection extends Thread {
 		}
 		boolean correctInput = false;
 		while (!correctInput) {
-			message = readUserInput();
+			readUserInput();
+			message = userMessage;
+			//message = readUserInput();
 			if (message.equals("+")) {
 				GameRoom room = new GameRoom("gameRoom" + (gameRooms.size() + 1));
 				room.addPlayer(this);
@@ -186,6 +191,9 @@ class Connection extends Thread {
 		}
 		if (index == 15 && score[0] != -1) {
 			int sum = score[6];
+			if(score[7] != -1) {
+				sum += score[7];
+			}
 			for (int i = 8; i < score.length; i++) {
 				sum += score[i];
 			}
@@ -193,8 +201,9 @@ class Connection extends Thread {
 		}
 	}
 
-	public String readUserInput() {
+	public void readUserInput() {
 		try {
+			int i = 0;
 			out.writeUTF("read");
 			String response = in.readUTF();
 			if (response.equals("exit")) {
@@ -202,8 +211,13 @@ class Connection extends Thread {
 				showGameRooms();
 			} else if (response.equals("HighScore")) {
 				out.writeUTF(server.getHighScore());
+			} else if (response.equals("yes") && !readOnly && playing) {
+				gameRoom.playerReady(this);
 			} else {
-				return response;
+				userMessage = response;
+				i += 1;
+				return;
+				//return response;
 			}
 
 //			if (response.equals("yes")) {
@@ -213,13 +227,18 @@ class Connection extends Thread {
 //				return response;
 //			}
 		} catch (SocketTimeoutException ste) {
-			return "timed out";
+			userMessage = "timed out";
+			return;
+			//return "timed out";
 		} catch (EOFException eofe) {
-			return "disconnected";
+			userMessage = "disconnected";
+			return;
+			//return "disconnected";
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 		}
-		return "";
+		userMessage = "";
+		//return "";
 	}
 
 	public void setHighScore() {
@@ -237,10 +256,27 @@ class Connection extends Thread {
 	public boolean getPlaying() {
 		return playing;
 	}
+	
+	public String getUserMessage() {
+		return userMessage;
+	}
+	
+	public void setUserMessage(String message) {
+		userMessage = message;
+	}
+	
+	public void setRemoved(boolean removed) {
+		isRemoved = removed;
+	}
+	
+	public boolean getRemoved() {
+		return isRemoved;
+	}
 
 	public void run() {
 		showGameRooms();
 		while (!stop) {
+			
 			try {
 				Thread.sleep(10);
 			} catch (InterruptedException e) {
@@ -248,11 +284,18 @@ class Connection extends Thread {
 				e.printStackTrace();
 			}
 //			if (!ready) {
+				readUserInput();
+//				String message = readUserInput();
+//				if(message.equals("yes")) {
+//					gameRoom.playerReady(this);
+//				}
+//			}
+//			if (!ready) {
 
-			if (!ready && readUserInput().equals("yes")) {
-				gameRoom.playerReady(this);
-				// return "";
-			}
+//			if (!ready && readUserInput().equals("yes")) {
+//				gameRoom.playerReady(this);
+//				// return "";
+//			}
 
 //				;
 //			}
