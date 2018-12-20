@@ -12,7 +12,7 @@ public class YahtzeeClient {
 
 	public YahtzeeClient() {
 		try {
-			s = new Socket("localhost", YahtzeeServer.PORT);
+			s = new Socket("192.168.43.235", YahtzeeServer.PORT);
 			in = new DataInputStream(s.getInputStream());
 			out = new DataOutputStream(s.getOutputStream());
 			Scanner scanner = new Scanner(System.in);
