@@ -21,7 +21,6 @@ public class SynchronisationClient {
 			System.out.println("What folder do you want to sync? ");
 			File directory = new File(scanner.nextLine());
 			directoryPath = directory.getPath();
-			// directory = new File(scanner.nextLine());
 			send(directoryPath);
 			System.out.println(in.readUTF());
 		} catch (UnknownHostException e) {

@@ -65,9 +65,6 @@ public class YahtzeeClient {
 
 	public static void main(String[] args) {
 		YahtzeeClient c = new YahtzeeClient();
-//		while (true) {
-//
-//		}
 		while (c.sender.isAlive() || c.receiver.isAlive()) {
 
 		}
